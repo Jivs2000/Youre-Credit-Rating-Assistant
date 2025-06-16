@@ -1,13 +1,6 @@
 import streamlit as st
 import pandas as pd
-import joblib
 
-# Load model
-try:
-    model = joblib.load("credit_model.py")
-except FileNotFoundError:
-    st.error("❌ Model file 'credit_model.pkl' not found. Please make sure it's in the same folder.")
-    st.stop()
 
 st.title("Creditworthiness Prediction App")
 
@@ -21,17 +14,51 @@ dti = st.number_input("Debt to Income Ratio", min_value=0.0, value=10.0)
 cdr = st.number_input("Credit to Debt Ratio", min_value=0.0, value=1.5)
 othdebt = st.number_input("Other Debt", min_value=0.0, value=3.0)
 
-# Predict button
-if st.button("Assess Creditworthiness"):
-    input_df = pd.DataFrame([[age, ed, employ, address, income, dti, cdr, othdebt]],
-                            columns=['age', 'ed', 'employ', 'address', 'income',
-                                     'Debt to Income Ratio', 'Credit to Debt Ratio', 'othdebt'])
+# --- Simple rule-based scoring ---
+score = 0
 
-    try:
-        prediction = model.predict(input_df)[0]
-        if prediction == 1:
-            st.error("⚠️ Result: Not Creditworthy (Default Likely)")
-        else:
-            st.success("✅ Result: Creditworthy (Low Risk)")
-    except Exception as e:
-        st.error(f"❌ Prediction failed: {e}")
+# Age
+if age >= 25 and age <= 60:
+    score += 10
+
+# Education
+score += ed * 2
+
+# Employment
+score += employ * 0.5
+
+# Address Stability
+score += address * 0.2
+
+# Income
+if income >= 50:
+    score += 10
+elif income >= 30:
+    score += 5
+
+# Debt-to-Income Ratio (lower is better)
+if dti < 15:
+    score += 10
+elif dti < 30:
+    score += 5
+
+# Credit-to-Debt Ratio (higher is better)
+if cdr >= 1:
+    score += 10
+elif cdr >= 0.5:
+    score += 5
+
+# Other Debt (lower is better)
+if othdebt < 5:
+    score += 5
+
+# --- Classification ---
+if score >= 40:
+    decision = "High Credit Worthiness"
+elif score >= 25:
+    decision = "Moderate Credit Worthiness"
+else:
+    decision = "Low Credit Worthiness"
+
+st.markdown(f"### Credit Score: {score:.1f}")
+st.markdown(f"## Credit Worthiness: **{decision}**")
