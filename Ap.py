@@ -4,7 +4,7 @@ import joblib
 
 # Load model
 try:
-    model = joblib.load("credit_model.pkl")
+    model = joblib.load("credit_model.py")
 except FileNotFoundError:
     st.error("❌ Model file 'credit_model.pkl' not found. Please make sure it's in the same folder.")
     st.stop()
